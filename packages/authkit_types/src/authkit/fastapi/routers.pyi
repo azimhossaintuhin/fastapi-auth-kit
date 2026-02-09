@@ -1,0 +1,6 @@
+from typing import Any, Callable
+from fastapi import APIRouter
+from ..settings import AuthSettings
+
+def build_auth_router_async(*, settings: AuthSettings, get_session: Callable[..., Any], user_model: type[Any]) -> APIRouter: ...
+def build_auth_router_sync(*, settings: AuthSettings, get_session: Callable[..., Any], user_model: type[Any]) -> APIRouter: ...
