@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from authkit import AuthSettings
+from authkit.settings import AuthSettings
 from authkit.fastapi.routers import build_auth_router_async
 
 from .models import Base, User

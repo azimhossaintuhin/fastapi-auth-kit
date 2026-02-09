@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from authkit import AuthSettings
+from authkit.settings import AuthSettings
 from authkit.fastapi.routers import build_auth_router_sync
 
 from .models import Base, User
