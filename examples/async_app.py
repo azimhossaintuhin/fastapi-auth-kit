@@ -1,10 +1,3 @@
-"""
-Async FastAPI example using authkit with SQLAlchemy AsyncSession.
-
-Run:
-  uv run python -m examples.async_app
-  # or: uvicorn examples.async_app:app --reload
-"""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,9 +8,6 @@ from authkit.fastapi.routers import build_auth_router_async
 
 from .models import Base, User
 
-# ---------------------------------------------------------------------------
-# Database (async)
-# ---------------------------------------------------------------------------
 DATABASE_URL = "sqlite+aiosqlite:///./examples_async.db"
 
 async_engine = create_async_engine(
@@ -46,23 +36,17 @@ async def get_async_session():
             await session.close()
 
 
-# ---------------------------------------------------------------------------
-# Auth settings
-# ---------------------------------------------------------------------------
 AUTH_SETTINGS = AuthSettings(
     secret_key="your-secret-key-change-in-production",
     algorithm="HS256",
     access_minutes=15,
     refresh_days=7,
     set_cookie_on_login=True,
-    cookie_secure=False,  # True in production with HTTPS
+    cookie_secure=False,
     cookie_samesite="lax",
 )
 
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:

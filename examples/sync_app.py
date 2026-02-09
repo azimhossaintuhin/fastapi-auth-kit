@@ -1,10 +1,3 @@
-"""
-Sync FastAPI example using authkit with SQLAlchemy sync Session.
-
-Run:
-  uv run python -m examples.sync_app
-  # or: uvicorn examples.sync_app:app --reload --port 8001
-"""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -16,9 +9,6 @@ from authkit.fastapi.routers import build_auth_router_sync
 
 from .models import Base, User
 
-# ---------------------------------------------------------------------------
-# Database (sync)
-# ---------------------------------------------------------------------------
 DATABASE_URL = "sqlite:///./examples_sync.db"
 
 engine = create_engine(
@@ -41,23 +31,17 @@ def get_sync_session():
         session.close()
 
 
-# ---------------------------------------------------------------------------
-# Auth settings
-# ---------------------------------------------------------------------------
 AUTH_SETTINGS = AuthSettings(
     secret_key="your-secret-key-change-in-production",
     algorithm="HS256",
     access_minutes=15,
     refresh_days=7,
     set_cookie_on_login=True,
-    cookie_secure=False,  # True in production with HTTPS
+    cookie_secure=False,
     cookie_samesite="lax",
 )
 
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)

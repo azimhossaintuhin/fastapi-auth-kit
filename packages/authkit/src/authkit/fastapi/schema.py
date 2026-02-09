@@ -13,7 +13,6 @@ class LoginInSchema(BaseModel):
 
 
 class RefreshTokenSchema(BaseModel):
-    """Schema for refresh token endpoint - token can come from body."""
     refresh_token: Optional[str] = None
 
 

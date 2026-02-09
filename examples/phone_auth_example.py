@@ -1,60 +1,29 @@
-"""
-Example: Extending BaseUser for phone number based authentication.
-
-This shows how to:
-1. Extend BaseUser with phone_number field
-2. Create a custom repository that supports phone lookup
-3. Create custom auth service methods
-4. Build custom FastAPI routes for phone-based auth
-"""
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import select, or_
 
-from authkit import AuthSettings
+from authkit.settings import AuthSettings
 from authkit.fastapi.models import BaseUser
 from authkit.hashing import hash_password, verify_password
 from authkit.tokens import create_access_token, create_refresh_token
 from authkit.protocols import SyncUserProtocol, UserProtocol
 
 
-# ============================================================================
-# 1. Extended User Model with Phone Number (using BaseUser)
-# ============================================================================
 class Base(DeclarativeBase):
     pass
 
 
 class User(BaseUser, Base):
-    """
-    User model extending BaseUser.
-    All required fields (id, email, username, password_hash, etc.) are inherited.
-    We just add phone_number as a custom field.
-    """
     __tablename__ = "users"
-
-    # Required fields inherited from BaseUser:
-    # id, email, username, password_hash, is_active, is_staff, is_superuser
-    
-    # Custom field: phone number
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
 
 
-# ============================================================================
-# 2. Custom Repository with Phone Support
-# ============================================================================
 class PhoneAuthRepository(SyncUserProtocol):
-    """
-    Custom repository that extends the protocol to support phone lookup.
-    Still implements the required protocol methods for compatibility.
-    """
-
     def __init__(self, session: Session, user_model: type[User]):
         self.session = session
         self.user_model = user_model
 
-    # Required protocol methods (for compatibility)
     def get_by_id(self, user_id: int) -> UserProtocol | None:
         return self.session.get(self.user_model, user_id)
 
@@ -77,10 +46,8 @@ class PhoneAuthRepository(SyncUserProtocol):
         is_active: bool = True,
         is_superuser: bool = False,
     ) -> UserProtocol:
-        # This won't be used for phone auth, but required by protocol
         raise NotImplementedError("Use create_user_by_phone instead")
 
-    # Custom phone-based methods
     def get_by_phone(self, phone_number: str) -> User | None:
         stmt = select(self.user_model).where(self.user_model.phone_number == phone_number)
         return self.session.execute(stmt).scalar_one_or_none()
@@ -104,8 +71,8 @@ class PhoneAuthRepository(SyncUserProtocol):
             )
         user = self.user_model(
             phone_number=phone_number,
-            email=email or f"{phone_number}@example.com",  # Dummy email
-            username=username or phone_number,  # Use phone as username
+            email=email or f"{phone_number}@example.com",
+            username=username or phone_number,
             password_hash=hash_password(password),
             is_active=is_active,
             is_staff=is_staff,
@@ -117,28 +84,18 @@ class PhoneAuthRepository(SyncUserProtocol):
         return user
 
 
-# ============================================================================
-# 3. Custom Auth Service for Phone Authentication
-# ============================================================================
 class PhoneAuthService:
-    """
-    Custom service for phone-based authentication.
-    Uses the standard token utilities from authkit.
-    """
-
     def __init__(self, settings: AuthSettings, repo: PhoneAuthRepository):
         self.settings = settings
         self.repo = repo
 
     def register_by_phone(self, phone_number: str, password: str) -> User:
-        """Register a new user with phone number."""
         return self.repo.create_user_by_phone(
             phone_number=phone_number,
             password=password,
         )
 
     def authenticate_by_phone(self, phone_number: str, password: str) -> User:
-        """Authenticate user by phone number and password."""
         user = self.repo.get_by_phone(phone_number)
         if not user or not verify_password(password, user.password_hash):
             raise HTTPException(
@@ -153,7 +110,6 @@ class PhoneAuthService:
         return user
 
     def assign_token(self, user: User) -> tuple[str, str]:
-        """Issue JWT tokens (uses authkit's token utilities)."""
         access_token = create_access_token(self.settings, subject=str(user.id))
         refresh_token = create_refresh_token(
             self.settings, subject=str(user.id), jti=__import__("secrets").token_hex(16)
@@ -161,9 +117,6 @@ class PhoneAuthService:
         return access_token, refresh_token
 
 
-# ============================================================================
-# 4. FastAPI App with Phone Auth Routes
-# ============================================================================
 from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -192,7 +145,6 @@ def get_session():
         session.close()
 
 
-# Pydantic schemas
 class PhoneRegisterSchema(BaseModel):
     phone_number: str
     password: str
@@ -203,7 +155,6 @@ class PhoneLoginSchema(BaseModel):
     password: str
 
 
-# FastAPI app
 app = FastAPI(title="Phone Auth Example")
 
 
@@ -212,7 +163,6 @@ def register_phone(
     data: PhoneRegisterSchema,
     session: Session = Depends(get_session),
 ):
-    """Register a new user with phone number."""
     repo = PhoneAuthRepository(session, User)
     service = PhoneAuthService(AUTH_SETTINGS, repo)
     user = service.register_by_phone(data.phone_number, data.password)
@@ -228,7 +178,6 @@ def login_phone(
     data: PhoneLoginSchema,
     session: Session = Depends(get_session),
 ):
-    """Login with phone number and password."""
     repo = PhoneAuthRepository(session, User)
     service = PhoneAuthService(AUTH_SETTINGS, repo)
     user = service.authenticate_by_phone(data.phone_number, data.password)
