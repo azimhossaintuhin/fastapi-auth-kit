@@ -151,23 +151,36 @@ AuthSettings(
 Business logic for creating users, authenticating, and issuing tokens. Uses a
 repository protocol so you can plug in your own persistence layer.
 
+### BaseUser Model (Extendable)
+
+Use `BaseUser` mixin to automatically get all required fields:
+
+```python
+from authkit.fastapi.models import BaseUser
+from sqlalchemy.orm import DeclarativeBase, Mapped
+from sqlalchemy import String
+
+class Base(DeclarativeBase):
+    pass
+
+class User(BaseUser, Base):
+    __tablename__ = "users"
+    
+    # Required fields inherited from BaseUser:
+    # id, email, username, password_hash, is_active, is_staff, is_superuser
+    
+    # Add your custom fields:
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=True)
+    avatar_url: Mapped[str] = mapped_column(String(255), nullable=True)
+```
+
 ### SQLAlchemy Adapters
 
 - `SQLAlchemySyncUserProtocol`
 - `SQLAlchemyAsyncUserProtocol`
 
-These adapters expect a SQLAlchemy model with the following fields:
-
-```python
-class User(Base):
-    id: int
-    email: str
-    username: str
-    password_hash: str
-    is_active: bool
-    is_staff: bool
-    is_superuser: bool
-```
+These adapters work with any model that implements the `UserProtocol` interface
+(including models extending `BaseUser`).
 
 ## API Endpoints
 
@@ -178,7 +191,7 @@ are available:
 |--------|----------------|-----------------------------|
 | POST   | /auth/register | Create a new user           |
 | POST   | /auth/login    | Authenticate + issue tokens |
-| POST   | /auth/refresh  | Refresh access token        |
+| POST   | /auth/refresh  | Refresh access token (accepts token from header, cookie, or body) |
 | POST   | /auth/logout   | Clear auth cookies          |
 | GET    | /auth/me       | Get current user            |
 
@@ -192,6 +205,18 @@ are available:
 **Login**
 ```json
 { "username_or_email": "user", "password": "secret" }
+```
+
+**Refresh** (token can be in header, cookie, or body)
+```json
+# Option 1: In request body
+{ "refresh_token": "jwt" }
+
+# Option 2: Authorization header
+Authorization: Bearer <refresh_token>
+
+# Option 3: Cookie (set automatically on login)
+Cookie: refresh_token=<refresh_token>
 ```
 
 **Token Response**
@@ -210,6 +235,27 @@ are available:
 Cookie names and TTL are customizable with:
 `cookie_name_access`, `cookie_name_refresh`, `cookie_max_age_access`,
 `cookie_max_age_refresh`.
+
+### Refresh Token Sources
+
+The `/auth/refresh` endpoint accepts refresh tokens from **multiple sources** (checked in order):
+
+1. **Authorization header**: `Authorization: Bearer <refresh_token>`
+2. **Cookie**: `refresh_token` cookie
+3. **Request body**: `{"refresh_token": "<token>"}`
+
+Example requests:
+
+```bash
+# Header
+curl -X POST /auth/refresh -H "Authorization: Bearer <refresh_token>"
+
+# Cookie (set automatically on login if enabled)
+curl -X POST /auth/refresh --cookie "refresh_token=<token>"
+
+# Body
+curl -X POST /auth/refresh -d '{"refresh_token": "<token>"}'
+```
 
 ## Security Considerations
 

@@ -1,22 +1,36 @@
 """
 Shared SQLAlchemy User model for authkit examples.
-Compatible with both sync and async sessions.
+Shows how to extend BaseUser with custom fields.
+
+Example of extending BaseUser:
+    from authkit.fastapi.models import BaseUser
+    from sqlalchemy.orm import DeclarativeBase, Mapped
+    from sqlalchemy import String
+    
+    class Base(DeclarativeBase):
+        pass
+    
+    class User(BaseUser, Base):
+        __tablename__ = "users"
+        # Add custom fields:
+        phone_number: Mapped[str] = mapped_column(String(20), nullable=True)
 """
-from sqlalchemy import String, Boolean, Integer
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase
+
+from authkit.fastapi.models import BaseUser
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class User(Base):
+class User(BaseUser, Base):
+   
     __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    username: Mapped[str] = mapped_column(String(150), unique=True, nullable=False, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_staff: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    
+    # Required fields are inherited from BaseUser:
+    # - id, email, username, password_hash
+    # - is_active, is_staff, is_superuser
+    
+    # Add your custom fields here if needed:
+    # phone_number: Mapped[str] = mapped_column(String(20), nullable=True)

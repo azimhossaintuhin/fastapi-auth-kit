@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Awaitable
+from typing import Any, Callable
 from fastapi import  APIRouter, Depends, HTTPException , Request , Response,status
 
 from ..ext.sqlalchemy import SQLAlchemyAsyncUserProtocol, SQLAlchemySyncUserProtocol
@@ -8,7 +8,8 @@ from ..settings import AuthSettings
 from ..service import  AuthService, AsyncAuthService
 from  ..authenticator import AsyncAuthenticator , SyncAuthenticator
 
-from .schema import RegisterInSchema, LoginInSchema
+from .schema import RegisterInSchema, LoginInSchema, RefreshTokenSchema
+
 
 
 def _set_access_cookie(response:Response , settings:AuthSettings, token:str):
@@ -88,15 +89,26 @@ def build_auth_router_async(
             }
 
     @router.post("/refresh")
-    async def refresh(request:Request, response:Response, svc:AsyncAuthService=Depends(_svc)):
-        rt = extract_refresh_token(request,settings)
+    async def refresh(
+        request: Request,
+        response: Response,
+        body: RefreshTokenSchema | None = None,
+        svc: AsyncAuthService = Depends(_svc)
+    ):
+        # Extract token from header, cookie, or body (in that priority)
+        body_dict = body.model_dump() if body else {}
+        rt = extract_refresh_token(request, settings, body_dict)
         if not rt:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="Refresh token not found")
-        access,refresh = await svc.refresh_pair(rt)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token not found. Provide it in Authorization header, cookie, or request body."
+            )
+        access, refresh = await svc.refresh_pair(rt)
 
         if settings.set_cookie_on_login:
-            _set_access_cookie(response , settings , access)
-            _set_refresh_cookie(response , settings , refresh)
+            _set_access_cookie(response, settings, access)
+            if refresh:
+                _set_refresh_cookie(response, settings, refresh)
 
         return {
             "access_token": access,
@@ -123,7 +135,7 @@ def build_auth_router_sync(
         *,
         settings:AuthSettings,
         get_session:Callable[...,Any],
-        user_models:type[Any]
+        user_model:type[Any]
 )-> APIRouter:
     """
        Sync FastAPI router.
@@ -133,12 +145,12 @@ def build_auth_router_sync(
     router = APIRouter()
 
     def _svc(session=Depends(get_session))->AuthService:
-        repo = SQLAlchemySyncUserProtocol(session ,user_model=user_models)
+        repo = SQLAlchemySyncUserProtocol(session ,user_model=user_model)
         return  AuthService(settings, repo)
 
 
     def _auth(session=Depends(get_session))->SyncAuthenticator:
-         repo =  SQLAlchemySyncUserProtocol(session ,user_model=user_models)
+         repo =  SQLAlchemySyncUserProtocol(session ,user_model=user_model)
          return SyncAuthenticator(settings , repo)
 
 
@@ -167,15 +179,25 @@ def build_auth_router_sync(
             }
 
     @router.post("/refresh")
-    def refresh(request:Request, response:Response, svc:AuthService=Depends(_svc)):
-        rt = extract_refresh_token(request,settings)
+    def refresh(
+        request: Request,
+        response: Response,
+        body: RefreshTokenSchema | None = None,
+        svc: AuthService = Depends(_svc)
+    ):
+        # Extract token from header, cookie, or body (in that priority)
+        body_dict = body.model_dump() if body else {}
+        rt = extract_refresh_token(request, settings, body_dict)
         if not rt:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="Refresh token not found")
-        access,refresh = svc.refresh_pair(rt)
-
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token not found. Provide it in Authorization header, cookie, or request body."
+            )
+        access, refresh = svc.refresh_pair(rt)
         if settings.set_cookie_on_login:
-            _set_access_cookie(response , settings , access)
-            _set_refresh_cookie(response , settings , refresh)
+            _set_access_cookie(response, settings, access)
+            if refresh:
+                _set_refresh_cookie(response, settings, refresh)
 
         return {
             "access_token": access,

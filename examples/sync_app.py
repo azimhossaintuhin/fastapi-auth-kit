@@ -74,7 +74,7 @@ app = FastAPI(
 auth_router = build_auth_router_sync(
     settings=AUTH_SETTINGS,
     get_session=get_sync_session,
-    user_models=User
+    user_model=User
 )
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
