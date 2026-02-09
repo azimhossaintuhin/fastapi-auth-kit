@@ -1,4 +1,4 @@
-# Fast Auth Kit
+# FastAPI Authkit
 
 Authentication toolkit for FastAPI with JWT, designed for both
 sync and async SQLAlchemy backends. This package provides batteries-included
@@ -39,10 +39,10 @@ uv sync
 ### In your project
 
 ```bash
-pip install fast-auth-kit
+pip install fastapi-authkit
 ```
 
-> The PyPI package name is `fast-auth-kit`, the import name is `authkit`.
+> The PyPI package name is `fastapi-authkit`, the import name is `authkit`.
 
 ## Quickstart (Async)
 
