@@ -3,7 +3,7 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "fastapi-auth-kit"
+name = "fastapi-jwt-authkit"
 version = "0.1.0"
 description = "FastAPI authentication library with JWT access/refresh tokens, sync & async SQLAlchemy support, built-in auth routes (register/login/refresh/me), secure password hashing, and cookie/header token support."
 readme = "README.md"
@@ -34,12 +34,13 @@ dependencies = [
     "bcrypt>=4.0.0,<5.0.0",
     "sqlalchemy>=2.0.0",
     "pydantic[email]>=2.0.0",
+    "hatch>=1.16.3",
 ]
 
 [project.urls]
-Homepage = "https://github.com/azimhossaintuhin/fastapi-auth-kit"
-Repository = "https://github.com/azimhossaintuhin/fastapi-auth-kit"
-Issues = "https://github.com/azimhossaintuhin/fastapi-auth-kit/issues"
+Homepage = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit"
+Repository = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit"
+Issues = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -57,6 +58,12 @@ packages = ["packages/authkit/src/authkit"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "packages/authkit_types/src/authkit" = "authkit"
+
+[tool.hatch.publish.repositories.testpypi]
+url = "https://test.pypi.org/legacy/"
+
+[tool.hatch.publish.repositories.pypi]
+url = "https://upload.pypi.org/legacy/"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -38,10 +38,10 @@ uv sync
 ### In your project
 
 ```bash
-pip install fastapi-auth-kit
+pip install fastapi-jwt-authkit
 ```
 
-> The PyPI package name is `fastapi-auth-kit`, the import name is `authkit`.
+> The PyPI package name is `fastapi-jwt-authkit`, the import name is `authkit`.
 
 ### Typing support
 
