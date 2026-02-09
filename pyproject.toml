@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-jwt-authkit"
-version = "1.0.0"
+version = "1.0.1"
 description = "FastAPI authentication library with JWT access/refresh tokens, sync & async SQLAlchemy support, built-in auth routes (register/login/refresh/me), secure password hashing, and cookie/header token support."
 readme = "README.md"
 requires-python = ">=3.10"
