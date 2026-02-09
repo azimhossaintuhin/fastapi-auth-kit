@@ -66,3 +66,4 @@ examples_sync.db
 # Build artifacts
 *.tar.gz
 *.whl
+.pypirc
