@@ -5,25 +5,29 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://pepy.tech/badge/fastapi-jwt-authkit)](https://pepy.tech/project/fastapi-jwt-authkit)
 
-**FastAPI authentication library with JWT access/refresh tokens, sync & async SQLAlchemy support, built-in auth routes (register/login/refresh/me), secure password hashing, and cookie/header token support.**
+**FastAPI authentication library with JWT access/refresh tokens, sync & async SQLAlchemy support, built-in auth routes (register/login/refresh/me), secure password hashing, cookie/header token support, and CLI superuser creation via `authkit csu`.**
 
-Complete authentication toolkit for FastAPI with JWT, designed for both sync and async SQLAlchemy backends. Provides batteries-included auth services, FastAPI routers, token utilities, and a clean protocol-driven repository interface.
+Complete authentication toolkit for FastAPI with JWT, designed for both sync and async SQLAlchemy backends. Provides batteries-included auth services, FastAPI routers, token utilities, CLI tooling for admin bootstrap, and a clean protocol-driven repository interface.
 
 ## Highlights
 
 - JWT access + refresh tokens with rotation
 - Sync and async SQLAlchemy adapters
 - Drop-in FastAPI routers for register, login, refresh, logout, and `/me`
+- CLI superuser creation via `authkit csu`
 - Cookie and Authorization header support
 - Strong typing and protocol-based extensibility
 - Works with your own User model
 
 ## Package Layout
 
+Core package layout (including CLI support):
+
 ```
 packages/authkit/src/authkit/
   fastapi/      # FastAPI router builders + schemas
   ext/          # SQLAlchemy protocol adapters (sync/async)
+  cli.py        # CLI (authkit csu)
   authenticator.py
   service.py
   tokens.py
@@ -52,6 +56,56 @@ pip install fastapi-jwt-authkit
 
 Type information (`.pyi` + `py.typed`) is bundled with the package for IDEs and
 static type checkers.
+
+### CLI (Create Superuser)
+
+`authkit csu` helps you bootstrap authentication quickly by creating your first
+admin account from the terminal without building a custom seed script.
+
+What it provides:
+
+- Creates a superuser with `is_staff=True` and `is_superuser=True`
+- Hashes password securely before saving
+- Works with your own SQLAlchemy `User` model
+- Supports interactive input and optional CLI flags
+- Can create tables first with `--create-tables`
+
+Install with CLI dependencies:
+
+```bash
+pip install "fastapi-jwt-authkit[fastapi,sqlalchemy]"
+```
+
+Run interactively:
+
+```bash
+authkit csu
+```
+
+Prompt order:
+
+1. `DB URL`
+2. `Model`
+3. `User`
+4. `Username`
+5. `Email`
+6. `Password` and `Confirm Password` (secure `getpass`)
+
+You can prefill any values with flags, and missing values are prompted:
+
+- `--dburl`
+- `--model`
+- `--user`
+- `--username`
+- `--email`
+- `--create-tables`
+- `--echo`
+
+Example:
+
+```bash
+authkit csu --dburl "sqlite:///./app.db" --model "app.models" --user "User" --username "admin" --email "admin@example.com" --create-tables
+```
 
 ## Quickstart (Async)
 
@@ -121,7 +175,7 @@ app = FastAPI()
 auth_router = build_auth_router_sync(
     settings=settings,
     get_session=get_session,
-    user_models=User,
+    user_model=User,
 )
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 ```

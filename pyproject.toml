@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-jwt-authkit"
-version = "1.0.2"
-description = "FastAPI authentication library with JWT access/refresh tokens, sync & async SQLAlchemy support, built-in auth routes (register/login/refresh/me), secure password hashing, and cookie/header token support."
+version = "1.0.3"
+description = "FastAPI authentication library with JWT access/refresh tokens, sync and async SQLAlchemy support, built-in auth routes (register/login/refresh/logout/me), secure password hashing, cookie/header token support, and CLI superuser creation."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Azim Hossain Tuhin" }]
-keywords = ["fastapi", "auth", "authentication", "jwt", "json-web-token", "sqlalchemy", "async", "sync", "security", "login", "register", "refresh-token", "access-token", "password-hashing", "bcrypt", "fastapi-auth", "fastapi-jwt"]
+keywords = ["fastapi", "auth", "authentication", "jwt", "json-web-token", "sqlalchemy", "async", "sync", "security", "login", "register", "refresh-token", "access-token", "password-hashing", "bcrypt", "fastapi-auth", "fastapi-jwt", "cookie-auth", "cli", "superuser", "authkit-csu", "admin-user"]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -36,6 +36,9 @@ dependencies = [
 Homepage = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit"
 Repository = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit"
 Issues = "https://github.com/azimhossaintuhin/fastapi-jwt-authkit/issues"
+
+[project.scripts]
+authkit = "authkit.cli:main"
 
 [project.optional-dependencies]
 fastapi = [
